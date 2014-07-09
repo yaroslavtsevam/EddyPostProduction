@@ -83,7 +83,7 @@ Weekly_A_114 =  AllData_A_weekly[AllData_A_weekly[['Doy']] >114,]
 Weekly_A_90 =  AllData_A_weekly[AllData_A_weekly[['Doy']] >90,]
 Weekly_B_114 =  AllData_B_weekly[AllData_B_weekly[['Doy']] >114,]
 periods_a =c('hourly_A_snow','hourly_A_6_05_15_05','hourly_A_15_05_10_06','hourly_A_10_06_17_06','hourly_A_17_06_24_06','hourly_A_24_06_01_07','hourly_A_01_07_08_07','hourly_A_08_07_15_07','hourly_A_15_07_25_07','hourly_A_25_07_08_08','hourly_A_08_08_31_13')
-periods_b = c('hourly_A_snow','hourly_B_6_05_15_05','hourly_B_15_05_10_06','hourly_B_10_06_17_06','hourly_B_17_06_24_06','hourly_B_24_06_01_07','hourly_B_01_07_08_07','hourly_B_08_07_15_07','hourly_B_15_07_25_07','hourly_B_25_07_08_08','hourly_B_08_08_31_13')
+periods_b = c('hourly_B_6_05_15_05','hourly_B_6_05_15_05','hourly_B_15_05_10_06','hourly_B_10_06_17_06','hourly_B_17_06_24_06','hourly_B_24_06_01_07','hourly_B_01_07_08_07','hourly_B_08_07_15_07','hourly_B_15_07_25_07','hourly_B_25_07_08_08','hourly_B_08_08_31_13')
 
 ############ NEE_f for two towers, hourly#########################
 
@@ -123,6 +123,19 @@ ggplot() +
   theme(axis.title.y = element_text(size = 15, face="bold")) +
   theme(axis.title.x = element_text(size =15, face="bold")) +
   ggtitle("NEE_f cumulation for two towers total")
+
+ggplot() +
+  geom_line(data = Daily_A_114, aes(x=Doy, y=cumsum((Reco * 12*18 /10000))), size=1, position=pd) +
+  geom_line(data = Daily_A_114, aes(x=Doy, y=cumsum((GPP * 12*18 /10000))),size=1, linetype =2, position=pd) +
+  scale_x_continuous(breaks = round(seq(120, 360, by = 40),1))+
+  xlab("Day of the year ")+
+  ylab(expression(paste(bold("Cumulative Reco, GPP")," ( g "," ",C[CO[2]]," ",m^-2," "," )",sep="")))+
+  #μmol CO2 m-2s-1)")+
+  geom_hline(yintercept = 0, linetype=2)+
+  theme_few(base_size = 15, base_family = "serif")+
+  theme(axis.title.y = element_text(size = 15, face="bold")) +
+  theme(axis.title.x = element_text(size =15, face="bold"))
+ # ggtitle("NEE_f cumulation for two towers total")
 
 
 
@@ -183,13 +196,13 @@ ggplot() +
 pd <- position_dodge(1)
 for (i in 1:length(periods_a))
   {
-  #pdf(paste("period_",i,".pdf", sep=""))
+  pdf(paste("plots/period_",i,".pdf",sep=""), paper = "a4r", width=10.75, height=5.73)
   print(
     ggplot() +
       geom_errorbar(data = get(periods_a[i]), aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors), width=.5,alpha=.3, linetype=2) +
       geom_line(data =get(periods_a[i]), aes(x=hour, y=hour_means),linetype=2) +
       geom_point(data = get(periods_a[i]), aes(x=hour, y=hour_means),size=3, shape=21, fill="white")+
-    geom_errorbar(data =get(periods_b[i]), aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors), width=.5,alpha=.3, position=pd, linetype=2) +
+    geom_errorbar(data = get(periods_b[i]), aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors), width=.5,alpha=.3, position=pd, linetype=2) +
     geom_line(data =get(periods_b[i]), aes(x=hour, y=hour_means),position=pd) +
     geom_point(data = get(periods_b[i]), aes(x=hour, y=hour_means),position=pd,size=3, shape=21, fill="black")+
       geom_vline(xintercept = 4, size=3, alpha=.2)+
@@ -203,39 +216,58 @@ for (i in 1:length(periods_a))
       theme(axis.title.x = element_text(size =15, face="bold"))+
       ggtitle(periods_a[i])
   )
-  #dev.off()
+  dev.off()
 }
 #### Dependecies from factors  - useless for NEE, we need to deconstruct it###########
 
 ggplot() +
 
-  geom_point(data = Daily_A_114 , aes(x=VWC_1_Avg*100, y=NEE_f_sums* 12 * 18/10000),position=pd,size=2, shape=21, fill="white")+
+  geom_point(data = Daily_A_114 , aes(x=VWC_1_Avg*100, y=NEE_f_sums* 12 * 18/10000),position=pd,size=2, shape=1, fill="white")+
 
+  geom_point(data = Daily_A_114 , aes(x=VWC_1_Avg*100, y=GPP*12 * 18/10000),position=pd,size=2, shape=2, fill="black")+
+  geom_point(data = Daily_A_114 , aes(x=VWC_1_Avg*100, y=Reco* 12 * 18/10000),position=pd,size=2, shape=3, fill="grey")+
   geom_hline(yintercept = 0, size=.5, linetype = 2)+
   coord_cartesian(xlim = c(0, 50))+
   xlab("Soil water content (%)")+
-  ylab(expression(paste(bold("NEE")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
+  ylab(expression(paste(bold("NEE, GPP, Reco")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
   #μmol CO2 m-2s-1)")+
   theme_few(base_size = 15, base_family = "serif")+
   theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold")) +
-  ggtitle("Dependecies from factors  - useless for NEE, we need to deconstruct it ")
+  theme(axis.title.x = element_text(size =15, face="bold"))
+  #ggtitle("Dependecies from factors  - useless for NEE, we need to deconstruct it ")
 
 #### Dependecies from factors  - useless for NEE, we need to deconstruct it###########
 
 ggplot() +
 
-  geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=NEE_f_sums* 12 * 18/10000),position=pd,size=2, shape=21, fill="white")+
-
+  geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=NEE_f_sums* 12 * 18/10000),position=pd,size=2, shape=1, fill="red")+
+  geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=GPP* 12 * 18/10000),position=pd,size=2, shape=2, fill="green")+
+  geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=Reco* 12 * 18/10000),position=pd,size=2, shape=3, fill="blue")+
   geom_hline(yintercept = 0, size=.5, linetype = 2)+
-  coord_cartesian(xlim = c(0, 50))+
+  coord_cartesian(xlim = c(0, 25))+
   xlab("Temperature (C)")+
-  ylab(expression(paste(bold("NEE")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
+  ylab(expression(paste(bold("NEE, GPP, Reco")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
   #μmol CO2 m-2s-1)")+
   theme_few(base_size = 15, base_family = "serif")+
   theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold")) +
-  ggtitle("Dependecies from factors  - useless for NEE, we need to deconstruct it ")
+  theme(axis.title.x = element_text(size =15, face="bold"))
+  #ggtitle("Dependecies from factors  - useless for NEE, we need to deconstruct it ")
+
+#### Dependecies from factors  - useless for NEE, we need to deconstruct it###########
+
+ggplot() +
+
+  geom_point(data = Daily_A_114 , aes(x=PAR_Den_Avg, y=GPP*12*18/10000),position=pd,size=2, shape=21, fill="white")+
+
+  #geom_hline(yintercept = 0, size=.5, linetype = 2)+
+
+  ylab(expression(paste(bold(" GPP")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
+  xlab(expression(paste(bold("PAR "),"( ", mu,"mol", " ",m^-2," ",s^-1," )",sep=""))) +
+  #μmol CO2 m-2s-1)")+
+  theme_few(base_size = 15, base_family = "serif")+
+  theme(axis.title.y = element_text(size = 15, face="bold")) +
+  theme(axis.title.x = element_text(size =15, face="bold"))
+  #ggtitle("Dependecies from factors  - useless for NEE, we need to deconstruct it ")
 
 #########################################################
 

@@ -315,7 +315,10 @@ daily_data = function(Data){
 
   PAR_margin_for_night = 5
   Reco  = as.vector(by(Data[,c(16,52), with=FALSE], Data$Doy, function(x) mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0], na.rm=TRUE)*48 ))
-  GPP  = as.vector(by(Data[,c(16,52), with=FALSE], Data$Doy, function(x) sum( mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night& x[['NEE_f']] < 0 ], na.rm=TRUE) - x[['NEE_f']][x[['PAR_Den_Avg']] > PAR_margin_for_night ] , na.rm=TRUE)))
+  GPP  = as.vector(by(Data[,c(16,52), with=FALSE], Data$Doy, function(x) {
+    y = mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0 ], na.rm=TRUE) - x[['NEE_f']][x[['PAR_Den_Avg']] > PAR_margin_for_night ]
+    return(sum( y[y>0], na.rm=TRUE))}
+   ))
 
 
   NA_count = tapply(as.numeric(Data[['NEE']]), Data$Doy, function(x) length(which(is.na(x))))
