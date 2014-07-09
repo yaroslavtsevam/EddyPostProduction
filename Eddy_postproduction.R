@@ -32,7 +32,7 @@ read_eddy_data = function(data_path)
           temp_dataset = temp_dataset[,inter, with = FALSE]
           dataset = data.table(dataset)[,inter, with = FALSE]
           print(temp_dataset)
-        
+
       }
       #print(names(temp_dataset))
       stop_date_data = max(as.double(dataset[['DOY']]), na.rm=TRUE)
@@ -211,12 +211,12 @@ max_footprints = function(site_point, s_polygon, alldata, wind_var)
 filter_by_quality = function(join_){
   print("Starting filtering")
   join_[join_ < -9000] = NA
-  
+
   join_.sigma = sd(join_[['NEE']], na.rm = TRUE)
   join_.mean = mean(join_[['NEE']], na.rm = TRUE)
   print(join_.sigma)
   print(join_.mean)
-  
+
   print("Going to filter out next amount of NEE data:")
   print(length(join_[['NEE']][join_[['NEE']] < join_.mean - 3*join_.sigma]))
   join_[['NEE']][join_[['NEE']] < join_.mean - 3*join_.sigma] = NA
@@ -245,12 +245,6 @@ reddyproc_gapfill = function(join_){
   TempDT[[1]] = TempDT[[1]] + as.difftime(15, units="mins")
   setkey(TempDT,'sDateTime')
   setkey(join_,'DateTime')
-  print('sDateTime')
-  print(TempDT[['sDateTime']][1])
-  print('DateTime')
-  print(TempDT[['sDateTime']][1])
-  cat ("Press [enter] to continue")
-  line <- readline()
   FullData_ = join_[TempDT[,c('sDateTime','NEE_f','Rg_f','LE_f','H_f','Tair_f','rH_f','VPD_f','Tsoil_f'), with=FALSE],roll=FALSE]
 
   return(FullData_)
@@ -287,6 +281,186 @@ PlotWindRoses = function(EddyData, wind_speed, wind_dir)
   ## source apportionment plot - contribution to mean
   ## Not run:
   pollutionRose(EddyData, ws=wind_speed, wd=wind_dir, pollutant = "x_70%", type = "season", statistic = "prop.mean")
+}
+ma  = function(x,n=7){
+  filter(x,rep(1/n,n), sides=2)
+}
+
+daily_data = function(Data){
+  new_names = c()
+  for (name in names(Data)){
+    if ((class(AllData_A[[name]])[1] == 'numeric' ) | (class(AllData_A[[name]])[1] == 'integer' ) | (class(AllData_A[[name]])[1] == 'character' )){
+      daily_sum = tapply(as.numeric(Data[[name]]), Data$Doy, sum, na.rm = TRUE)
+      daily_mean = tapply(as.numeric(Data[[name]]), Data$Doy, mean, na.rm = TRUE)
+      daily_error = tapply(as.numeric(Data[[name]]), Data$Doy, sd)
+
+      daily_error = daily_error/sqrt(length(Data[[name]]))*1.96
+
+      if (exists('daily_sums')) {
+        daily_sums = cbind(daily_sums, daily_sum)
+        daily_means = cbind(daily_means, daily_mean)
+        daily_errors = cbind(daily_errors, daily_error)
+      }
+      else{
+        daily_sums = data.frame(daily_sum)
+        daily_means = data.frame(daily_mean)
+        daily_errors = data.frame(daily_error)
+      }
+      new_names = c(new_names,name)
+    }
+  }
+  names(daily_sums) = paste(new_names,"sums", sep="_")
+  names(daily_means) = new_names
+  names(daily_errors) = paste(new_names,"errors", sep="_")
+
+  PAR_margin_for_night = 5
+  Reco  = as.vector(by(Data[,c(16,52), with=FALSE], Data$Doy, function(x) mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0], na.rm=TRUE)*48 ))
+  GPP  = as.vector(by(Data[,c(16,52), with=FALSE], Data$Doy, function(x) sum( mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night& x[['NEE_f']] < 0 ], na.rm=TRUE) - x[['NEE_f']][x[['PAR_Den_Avg']] > PAR_margin_for_night ] , na.rm=TRUE)))
+
+
+  NA_count = tapply(as.numeric(Data[['NEE']]), Data$Doy, function(x) length(which(is.na(x))))
+  NA_marker = NA_count
+
+  NA_marker[NA_marker < 16] = 1
+
+  NA_marker[NA_marker >= 16] = 0.1
+
+  #add posix dates
+  return(cbind(daily_sums, daily_means,daily_errors, NA_count,NA_marker, Reco, GPP))
+  #return(cbind(daily_sums, daily_means,daily_errors))
+}
+
+
+weekly_data = function(Data){
+  new_names = c()
+  for (name in names(Data)){
+    if ((class(AllData_A[[name]])[1] == 'numeric' ) | (class(AllData_A[[name]])[1] == 'integer' ) | (class(AllData_A[[name]])[1] == 'character' )){
+      weekly_sum = tapply(as.numeric(Data[[name]]), Data$week, sum, na.rm = TRUE)
+      weekly_mean = tapply(as.numeric(Data[[name]]), Data$week, mean, na.rm = TRUE)
+      weekly_error = tapply(as.numeric(Data[[name]]), Data$week, sd)
+      weekly_error = weekly_error/sqrt(length(Data[[name]]))*1.96
+
+      if (exists('weekly_sums')) {
+        weekly_sums = cbind(weekly_sums, weekly_sum)
+        weekly_means = cbind(weekly_means, weekly_mean)
+        weekly_errors = cbind(weekly_errors, weekly_error)
+      }
+      else{
+        weekly_sums = data.frame(weekly_sum)
+        weekly_means = data.frame(weekly_mean)
+        weekly_errors = data.frame(weekly_error)
+      }
+      new_names = c(new_names,name)
+    }
+  }
+  names(weekly_sums) = paste(new_names,"sums", sep="_")
+  names(weekly_means) = new_names
+  names(weekly_errors) = paste(new_names,"errors", sep="_")
+  return(cbind(weekly_sums, weekly_means, weekly_errors))
+}
+#redo like day
+month_data = function(Data){
+  mnew_names = c()
+  for (name in names(Data)){
+    if ((class(AllData_A[[name]])[1] == 'numeric' ) | (class(AllData_A[[name]])[1] == 'integer' ) | (class(AllData_A[[name]])[1] == 'character' )){
+      month_sum = tapply(as.numeric(Data[[name]]), Data$month_number, sum, na.rm = TRUE )
+      month_mean = tapply(as.numeric(Data[[name]]), Data$month_number, mean, na.rm = TRUE)
+      month_error = tapply(as.numeric(Data[[name]]), Data$month_number, sd)
+      month_error = month_error/sqrt(length(Data[[name]]))*1.96
+
+      if (exists('month_sums')) {
+        month_sums = cbind(month_sums, month_sum)
+        month_means = cbind(month_means, month_mean)
+        month_errors = cbind(month_errors, month_error)
+      }
+      else{
+        month_sums = data.frame(month_sum)
+        month_means = data.frame(month_mean)
+        month_errors = data.frame(month_error)
+      }
+
+      mnew_names = c(mnew_names,name)
+    }
+  }
+
+  names(month_sums) = paste(mnew_names,"sums", sep="_")
+  names(month_means) = mnew_names
+  names(month_errors) = paste(mnew_names,"errors", sep="_")
+  #add posix dates
+  return(cbind(month_sums, month_means, month_errors))
+}
+###Hourly by month
+hourly_data = function(AllData){
+  hour_means = c()
+  hour_errors = c()
+  hour_months  = c()
+
+  for (m in 1:12) {
+
+    Data = AllData[AllData[['month_number']] == m,]
+
+    hour_mean = tapply(Data[['NEE_f']], Data$hour, mean)
+    hour_error = tapply(Data[['NEE_f']], Data$hour, sd)
+    hour_error = hour_error/sqrt(length(hour_error))*1.96
+    hour_month = rep(m, length(hour_error))
+    hour_means = c(hour_means, hour_mean)
+    hour_errors = c(hour_errors, hour_error)
+    hour_months  = c(hour_months, hour_month)
+
+  }
+  hour = as.integer(names(hour_mean))
+  return(data.frame(cbind(hour_means,hour_errors,hour_months,hour)))
+}
+
+
+hourly_NEE_period = function(AllData,start_date,stop_date){
+  hour_means = c()
+  hour_errors = c()
+  hour_months  = c()
+
+  AllData = AllData[(AllData[['DateTime']] > as.POSIXct(start_date) & AllData[['DateTime']] < as.POSIXct(stop_date)),]
+  nmax = max(na.exclude(AllData[['month_number']]))
+  nmin = min(na.exclude(AllData[['month_number']]))
+  for (m in nmin:nmax) {
+
+    Data = AllData[AllData[['month_number']] == m,]
+
+    hour_mean = tapply(Data[['NEE_f']], Data$hour, mean)
+    hour_error = tapply(Data[['NEE_f']], Data$hour, sd)
+    hour_error = hour_error/sqrt(length(hour_error))*1.96
+    hour_month = tapply(Data[['month_number']], Data$hour, mean)
+    hour_means = c(hour_means, hour_mean)
+    hour_errors = c(hour_errors, hour_error)
+    hour_months  = c(hour_months, hour_month)
+
+  }
+  hour = as.integer(names(hour_mean))
+  return(data.frame(cbind(hour_means,hour_errors,hour_months,hour)))
+}
+
+
+hourly_data_for_event = function(AllData, event_name){
+  hour_means = c()
+  hour_errors = c()
+
+
+  Data = AllData[AllData[[event_name]],]
+
+  hour_mean = tapply(Data[['NEE_f']], Data$hour, mean)
+  hour_error = tapply(Data[['NEE_f']], Data$hour, sd)
+  hour_error = hour_error/sqrt(length(hour_error))*1.96
+
+  hour_means = c(hour_means, hour_mean)
+  hour_errors = c(hour_errors, hour_error)
+
+
+
+  hour = as.integer(names(hour_mean))
+  return(data.frame(cbind(hour_means,hour_errors,hour)))
+}
+ForMotherRussia = function(Data){
+  Data[['DateTime']] = Data[['DateTime']] + as.difftime(-240, units="mins")
+  return(Data)
 }
 
 insert_event_mask = function(dt, datetime_column_name, event_start_date, event_stop_date, event_name){
@@ -333,6 +507,7 @@ FullEddyPostProcess = function(DataFolder,SiteUTM,SitePolygon,events_file,SiteCo
   #+++ Fill gaps in variables with MDS gap filling algorithm
   # Creating DataTable with filled and biomet data
   FullData  = reddyproc_gapfill(join.filtered)
+  FullData = ForMotherRussia(FullData)
   #Adding time periods
   FullData_with_Sep = add_separators(FullData,SiteCoordZone[1],SiteCoordZone[2],SiteCoordZone[3] )
   #Read event filed and add event's masks
