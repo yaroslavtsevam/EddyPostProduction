@@ -7,14 +7,17 @@ DataFolderB = 'Data_B/'
 Site_A = c(410041, 6188869)
 Site_B = c(410155, 6188893)
 site_polygon  = data.frame(as.numeric(c(409957,410179,410243,410014)),as.numeric(c(6188984,6189058,6188849,6188774)))
+site_polygon_A  = data.frame(as.numeric(c(410109.5,410012.7,409977.3,410086)),as.numeric(c(6188807,6188739
+,6188905,6188942)))
+site_polygon_B  = data.frame(as.numeric(c(410188,410225,410128,410086)),as.numeric(c(6188974,6188840,6188811,6188942)))
 forest_polygon  = data.frame(as.numeric(c(409472,409943,409532,408959,408587,408471,408353,408124,408048,408083,408088,408041,408038,408237,408524,408547,409090 ,409323,409550 ,409328,409535,409454)),as.numeric(c(6186623,6186720,6187669,6187536,6187517,6187632,6187882,6188235,6188193,6187844,6187575,6187405,6187222 ,6186987,6186310,6186133,6185574,6185407,6185467,6186180,6186267,6186542)))
 
 
 events_A = 'Data_A/events.csv'
 events_B = 'Data_B/events.csv'
 Site_coord_and_zone = c(55.837631, 37.564302, 4)
-AllData_A = FullEddyPostProcess (DataFolderA,Site_A,site_polygon,events_A,Site_coord_and_zone)
-AllData_B = FullEddyPostProcess (DataFolderB,Site_B,site_polygon,events_B,Site_coord_and_zone)
+AllData_A = FullEddyPostProcess (DataFolderA,Site_A,site_polygon_A,events_A,Site_coord_and_zone)
+AllData_B = FullEddyPostProcess (DataFolderB,Site_B,site_polygon_B,events_B,Site_coord_and_zone)
 
 
 
