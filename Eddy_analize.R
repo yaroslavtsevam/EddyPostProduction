@@ -335,13 +335,15 @@ ggplot() +
 ggplot() +
   geom_line(data =  Daily_A_114, aes(x=Doy, y=ma(VWC_1_Avg*100)),position=pd) +
   geom_point(data = Daily_A_114, aes(x=Doy, y=(VWC_1_Avg*100)),position=pd,size=3, shape=21, fill="white")+
+  geom_line(data =  Daily_B_114, aes(x=Doy, y=ma(VWC_1_Avg*100)),position=pd) +
+  geom_point(data = Daily_B_114, aes(x=Doy, y=(VWC_1_Avg*100)),position=pd,size=3, shape=21, fill="black")+
   coord_cartesian(xlim = c(110, 365),ylim = c(10, 40))+
   xlab("Day of the year") +
   ylab(expression(bold(paste("SWC at 5cm depth (%)"," ",sep="")))) +
   theme_few(base_size = 20, base_family = "serif")+
   theme(axis.title.y = element_text(size = 15, face="bold")) +
   theme(axis.title.x = element_text(size =15, face="bold"))+
-  ggtitle("Volumetric water content VWC A and BR")
+  ggtitle("Volumetric water content VWC A and B")
 
 ##### Precipitation
 

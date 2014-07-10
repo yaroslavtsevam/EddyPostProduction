@@ -119,7 +119,7 @@ join_for_gapfilling = function(data_,biometdata_){
   setkey(biometdata_,'DateTime')
   setkey(EddyDataWithPosixNew.F,'DateTime')
 
-  joined = merge(biometdata_[,c(1,5,6,7,8,15,16,17,20,23,33,36,37,38,39,40,44,45,46,47,48,49,50,51,52,53,54,56,57), with=FALSE],EddyDataWithPosixNew.F, all=TRUE, by=c('DateTime'),allow.cartesian=TRUE)
+  joined = merge(biometdata_[,c(1:57), with=FALSE],EddyDataWithPosixNew.F, all=TRUE, by=c('DateTime'),allow.cartesian=TRUE)
   #join = EddyDataWithPosixNew.F[biometdata_[,c(1,5,6,7,8,15,16,17,20,23,33,36,37,38,39,40,44,45,46,47,48,49,50,51,52,53,54,56,57), with=FALSE],roll=FALSE]
   print('Joined')
   #Converting column names to satisfy REddyProc convention
@@ -134,7 +134,7 @@ join_for_gapfilling = function(data_,biometdata_){
     joined = joined[!which(duplicated(joined))]
   }
   print("Starting big Gap fill")
-  joined.tf = fill_gap_by_date(joined,"DateTime",49)
+  joined.tf = fill_gap_by_date(joined,"DateTime",77)
   print('Stoped big gap fill')
   joined.tf[joined.tf == "NaN" | joined.tf == "NAN"] = NA
   #joined.tf[which(duplicated(joined.tf))] = NULL
