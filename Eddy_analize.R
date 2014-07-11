@@ -18,8 +18,9 @@ events_B = 'Data_B/events.csv'
 Site_coord_and_zone = c(55.837631, 37.564302, 4)
 AllData_A = FullEddyPostProcess (DataFolderA,Site_A,site_polygon_A,events_A,Site_coord_and_zone)
 AllData_B = FullEddyPostProcess (DataFolderB,Site_B,site_polygon_B,events_B,Site_coord_and_zone)
-
-
+setkey(AllData_A, 'DateTime')
+setkey(AllData_B, 'DateTime')
+AllData_B = merge(AllData_B,AllData_A[,c(1,40),with=FALSE], by = 'DateTime')
 
 #new_names = paste(names(AllData_A),"_a", sep="")
 #names(AllData_A) = new_names
@@ -94,10 +95,10 @@ pd <- position_dodge(.1) # move them .05 to the left and right
 hourly_data_As =hourly_data_A[hourly_data_A$hour_months > 1 & hourly_data_A$hour_months < 12,]
 hourly_data_Bs =hourly_data_B[hourly_data_B$hour_months > 1 & hourly_data_B$hour_months < 12 ,]
 ggplot() +
-  geom_errorbar(data =hourly_data_As, aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors), linetype=2, width=.1, position=pd) +
+  geom_errorbar(data =hourly_data_As, aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors), linetype=1,size=.1, width=.4, position=pd) +
   geom_line(data =hourly_data_As, aes(x=hour, y=hour_means),position=pd,size=.5, linetype=2) +
   geom_point(data = hourly_data_As, aes(x=hour, y=hour_means),position=pd,size=2, shape=21, fill="white")+
-  geom_errorbar(data = hourly_data_Bs, aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors),linetype=2, width=.1, position=pd) +
+  geom_errorbar(data = hourly_data_Bs, aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors),linetype=1,size=.1, width=.4, position=pd) +
   geom_line(data =hourly_data_Bs, aes(x=hour, y=hour_means),position=pd,size=.5) +
   geom_point(data = hourly_data_Bs, aes(x=hour, y=hour_means),position=pd,size=2, shape=21, fill="black")+
   geom_hline(yintercept = 0, linetype=2)+
@@ -124,12 +125,12 @@ ggplot() +
   geom_hline(yintercept = 0, linetype=2)+
   theme_few(base_size = 15, base_family = "serif")+
   theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold")) +
-  ggtitle("NEE_f cumulation for two towers total")
+  theme(axis.title.x = element_text(size =15, face="bold"))
+  #+ggtitle("NEE_f cumulation for two towers total")
 
 ggplot() +
   geom_line(data = Daily_A_114, aes(x=Doy, y=cumsum((Reco * 12*18 /10000))), size=1, position=pd) +
-  geom_line(data = Daily_A_114, aes(x=Doy, y=cumsum((GPP * 12*18 /10000))),size=1, linetype =2, position=pd) +
+  geom_line(data = Daily_B_114, aes(x=Doy, y=cumsum((Reco * 12*18 /10000))),size=1, linetype =2, position=pd) +
   scale_x_continuous(breaks = round(seq(120, 360, by = 40),1))+
   xlab("Day of the year ")+
   ylab(expression(paste(bold("Cumulative Reco, GPP")," ( g "," ",C[CO[2]]," ",m^-2," "," )",sep="")))+
@@ -139,6 +140,19 @@ ggplot() +
   theme(axis.title.y = element_text(size = 15, face="bold")) +
   theme(axis.title.x = element_text(size =15, face="bold"))
  # ggtitle("NEE_f cumulation for two towers total")
+
+ggplot() +
+  geom_line(data = Daily_A_114, aes(x=Doy, y=cumsum((GPP * 12*18 /10000))), size=1, position=pd) +
+  geom_line(data = Daily_B_114, aes(x=Doy, y=cumsum((GPP * 12*18 /10000))),size=1, linetype =2, position=pd) +
+  scale_x_continuous(breaks = round(seq(120, 360, by = 40),1))+
+  xlab("Day of the year ")+
+  ylab(expression(paste(bold("Cumulative Reco, GPP")," ( g "," ",C[CO[2]]," ",m^-2," "," )",sep="")))+
+  #μmol CO2 m-2s-1)")+
+  geom_hline(yintercept = 0, linetype=2)+
+  theme_few(base_size = 15, base_family = "serif")+
+  theme(axis.title.y = element_text(size = 15, face="bold")) +
+  theme(axis.title.x = element_text(size =15, face="bold"))
+# ggtitle("NEE_f cumulation for two towers total")
 
 
 

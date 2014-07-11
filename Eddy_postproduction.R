@@ -22,7 +22,7 @@ read_eddy_data = function(data_path)
       if (names(temp_dataset)[1] != "filename") {
         print(temp_dataset)
         print("Whoops strange csv, may be you've allready edited it in Excel? Trying to fix")
-          names(temp_dataset) = (as.character(temp_dataset[2, ]))
+          names(temp_dataset) = (as.character(temp_dataset[1, ]))
           print('Names gotten')
           temp_dataset = temp_dataset[4:length(temp_dataset[['date']]), ]
           print('Removing junk data')
@@ -314,8 +314,8 @@ daily_data = function(Data){
   names(daily_errors) = paste(new_names,"errors", sep="_")
 
   PAR_margin_for_night = 5
-  Reco  = as.vector(by(Data[,c(16,52), with=FALSE], Data$Doy, function(x) mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0], na.rm=TRUE)*48 ))
-  GPP  = as.vector(by(Data[,c(16,52), with=FALSE], Data$Doy, function(x) {
+  Reco  = as.vector(by(Data[,c("NEE_f","PAR_Den_Avg"), with=FALSE], Data$Doy, function(x) mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0], na.rm=TRUE)*48 ))
+  GPP  = as.vector(by(Data[,c("NEE_f","PAR_Den_Avg"), with=FALSE], Data$Doy, function(x) {
     y = mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0 ], na.rm=TRUE) - x[['NEE_f']][x[['PAR_Den_Avg']] > PAR_margin_for_night ]
     return(sum( y[y>0], na.rm=TRUE))}
    ))
