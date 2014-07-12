@@ -6,6 +6,7 @@ library("ggplot2")
 library('openair')
 library('ggthemes')
 library('pastecs')
+library("gridExtra")
 # Reading Data Function
 read_eddy_data = function(data_path)
 {

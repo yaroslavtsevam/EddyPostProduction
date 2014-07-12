@@ -116,42 +116,51 @@ ggplot() +
 ############ NEE_f cumulation for two towers total#########################
 
 
-ggplot() +
+Gr_NEE_cum = ggplot() +
   geom_line(data = Daily_A_114, aes(x=Doy, y=cumsum((NEE_f_sums * 12*18 /10000))), size=1, position=pd) +
   geom_line(data = Daily_B_114, aes(x=Doy, y=cumsum((NEE_f_sums * 12*18 /10000))),size=1, linetype =2, position=pd) +
-  xlab("Day of the year ")+
+  #xlab("Day of the year ")+
   ylab(expression(paste(bold("Cumulative NEE")," ( g "," ",C[CO[2]]," ",m^-2," "," )",sep="")))+
   #μmol CO2 m-2s-1)")+
   geom_hline(yintercept = 0, linetype=2)+
   theme_few(base_size = 15, base_family = "serif")+
-  theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold"))
+  theme(axis.title.y = element_text(size =10, face="bold")) +
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))+
+  theme(axis.ticks.x = element_blank())
   #+ggtitle("NEE_f cumulation for two towers total")
 
-ggplot() +
+Gr_Reco_cum = ggplot() +
   geom_line(data = Daily_A_114, aes(x=Doy, y=cumsum((Reco * 12*18 /10000))), size=1, position=pd) +
   geom_line(data = Daily_B_114, aes(x=Doy, y=cumsum((Reco * 12*18 /10000))),size=1, linetype =2, position=pd) +
   scale_x_continuous(breaks = round(seq(120, 360, by = 40),1))+
-  xlab("Day of the year ")+
-  ylab(expression(paste(bold("Cumulative Reco, GPP")," ( g "," ",C[CO[2]]," ",m^-2," "," )",sep="")))+
+  #xlab("Day of the year ")+
+  ylab(expression(paste(bold("Cumulative Reco")," ( g "," ",C[CO[2]]," ",m^-2," "," )",sep="")))+
   #μmol CO2 m-2s-1)")+
   geom_hline(yintercept = 0, linetype=2)+
   theme_few(base_size = 15, base_family = "serif")+
-  theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold"))
+  theme(axis.title.y = element_text(size = 10, face="bold",hjust=0.2, vjust=1,lineheight = 45)) +
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
  # ggtitle("NEE_f cumulation for two towers total")
 
-ggplot() +
+Gr_GPP_cum = ggplot() +
   geom_line(data = Daily_A_114, aes(x=Doy, y=cumsum((GPP * 12*18 /10000))), size=1, position=pd) +
   geom_line(data = Daily_B_114, aes(x=Doy, y=cumsum((GPP * 12*18 /10000))),size=1, linetype =2, position=pd) +
   scale_x_continuous(breaks = round(seq(120, 360, by = 40),1))+
   xlab("Day of the year ")+
-  ylab(expression(paste(bold("Cumulative Reco, GPP")," ( g "," ",C[CO[2]]," ",m^-2," "," )",sep="")))+
+  ylab(expression(paste(bold("Cumulative  GPP")," ( g "," ",C[CO[2]]," ",m^-2," )",sep="")))+
   #μmol CO2 m-2s-1)")+
   geom_hline(yintercept = 0, linetype=2)+
   theme_few(base_size = 15, base_family = "serif")+
-  theme(axis.title.y = element_text(size = 15, face="bold")) +
+  theme(axis.title.y = element_text(size =10, face="bold")) +
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))+
   theme(axis.title.x = element_text(size =15, face="bold"))
+
+grid.arrange(Gr_NEE_cum, Gr_Reco_cum, Gr_GPP_cum, ncol=1)
 # ggtitle("NEE_f cumulation for two towers total")
 
 
@@ -159,31 +168,32 @@ ggplot() +
 ############ NEE_f daily sums for all year ################################
 
 
-ggplot() +
-  geom_line(data = Daily_A_114, aes(x=Doy, y=ma(NEE_f_sums * 12*18 /10000)), size=1, position=pd) +
-  geom_line(data = Daily_B_114, aes(x=Doy, y=ma(NEE_f_sums* 12*18 /10000)),size=1, linetype =2, position=pd)+
-  #geom_line(data =Weekly_A_114 , aes(x=Doy, y=NEE_f_sums * 12 * 18/70000),position=pd) +
-  geom_point(data = Daily_A_114 , aes(x=Doy, y=NEE_f_sums* 12 * 18/10000),position=pd,size=2, shape=21, fill="white", alpha=Daily_A_114$NA_marker)+
-
-  #geom_line(data =Weekly_B_114, aes(x=Doy, y=NEE_f_sums* 12 * 18/70000),position=pd, linetype = 2) +
-  geom_point(data = Daily_B_114, aes(x=Doy, y=NEE_f_sums* 12 * 18/10000),position=pd,size=2, shape=21, fill="black", alpha=Daily_B_114$NA_marker)+
+Gr_NEE = ggplot() +
+  geom_line(data = Daily_A_114, aes(x=Doy, y=ma(NEE_f_sums* 12*18 /10000)), size=.8, position=pd, linetype=2) +
+  geom_point(data = Daily_A_114 , aes(x=Doy, y=NEE_f_sums* 12*18 /10000),position=pd,size=2, shape=21, fill="white",alpha=.5)+
+  geom_line(data = Daily_B_114, aes(x=Doy, y=ma(NEE_f_sums* 12*18 /10000)), size=.8, position=pd,linetype=1) +
+  geom_point(data = Daily_B_114 , aes(x=Doy, y=NEE_f_sums* 12*18 /10000),position=pd,size=2, shape=17, fill="white",alpha=.5)+
   geom_hline(yintercept = 0, size=.5, linetype = 2)+
   #geom_vline(xintercept = 250, size=.5, linetype = 1, alpha=.5, size=2)+
   xlab("Day of the year")+
   ylab(expression(paste(bold("NEE")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
   #μmol CO2 m-2s-1)")+
-  scale_x_continuous(breaks = round(seq(120, max(Weekly_B_114$Doy), by = 50),1))+
+  scale_x_continuous(breaks = round(seq(120, max(Daily_B_114$Doy), by = 50),1))+
   theme_few(base_size = 15, base_family = "serif")+
   theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold"))
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
   #ggtitle("NEE_f daily sums for all year ")
 
 ###### Reco
-ggplot() +
-  geom_line(data = Daily_A_114, aes(x=Doy, y=ma(Reco * 12*18 /10000)), size=1, position=pd) +
-  #geom_line(data =Weekly_A_114 , aes(x=Doy, y=NEE_f_sums * 12 * 18/70000),position=pd) +
-  geom_point(data = Daily_A_114 , aes(x=Doy, y=Reco* 12 * 18/10000),position=pd,size=2, shape=21, fill="white")+
-  geom_hline(yintercept = 0, size=.5, linetype = 2)+
+Gr_Reco = ggplot() +
+  geom_line(data = Daily_A_114, aes(x=Doy, y=ma(Reco * 12*18 /10000)), size=.8, position=pd, linetype=2) +
+  geom_point(data = Daily_A_114 , aes(x=Doy, y=Reco* 12 * 18/10000),position=pd,size=2, shape=21, fill="white",alpha=.5)+
+  geom_line(data = Daily_B_114, aes(x=Doy, y=ma(Reco * 12*18 /10000)), size=.8, position=pd,linetype=1) +
+  geom_point(data = Daily_B_114 , aes(x=Doy, y=Reco* 12 * 18/10000),position=pd,size=2, shape=17, fill="white",alpha=.5)+
+  #geom_hline(yintercept = 0, size=.5, linetype = 2)+
   #geom_vline(xintercept = 250, size=.5, linetype = 1, alpha=.5, size=2)+
   xlab("Day of the year")+
   ylab(expression(paste(bold("Reco")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
@@ -191,24 +201,31 @@ ggplot() +
   scale_x_continuous(breaks = round(seq(120, max(Daily_B_114$Doy), by = 50),1))+
   theme_few(base_size = 15, base_family = "serif")+
   theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold"))
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
  # ggtitle("Reco daily sums for all year ")
 
 ###### GPP
-ggplot() +
-  geom_line(data = Daily_A_114, aes(x=Doy, y=ma(GPP * 12*18 /10000)), size=1, position=pd) +
-  geom_point(data = Daily_A_114 , aes(x=Doy, y=GPP* 12 * 18/10000),position=pd,size=2, shape=21, fill="white",)+
-  geom_hline(yintercept = 0, size=.5, linetype = 2)+
+Gr_GPP = ggplot() +
+  geom_line(data = Daily_A_114, aes(x=Doy, y=ma(GPP * 12*18 /10000)), size=.8, position=pd, linetype=2) +
+  geom_point(data = Daily_A_114 , aes(x=Doy, y=GPP* 12 * 18/10000),position=pd,size=2, shape=21, fill="white",alpha=.5)+
+  geom_line(data = Daily_B_114, aes(x=Doy, y=ma(GPP * 12*18 /10000)), size=.8, position=pd,linetype=1) +
+  geom_point(data = Daily_B_114 , aes(x=Doy, y=GPP* 12 * 18/10000),position=pd,size=2, shape=17, fill="white",alpha=.5)+
+  #geom_hline(yintercept = 0, size=.5, linetype = 2)+
   #geom_vline(xintercept = 250, size=.5, linetype = 1, alpha=.5, size=2)+
   xlab("Day of the year")+
   ylab(expression(paste(bold("GPP")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
   #μmol CO2 m-2s-1)")+
   scale_x_continuous(breaks = round(seq(120, max(Daily_B_114$Doy), by = 50),1))+
   theme_few(base_size = 15, base_family = "serif")+
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))+
   theme(axis.title.y = element_text(size = 15, face="bold")) +
   theme(axis.title.x = element_text(size =15, face="bold"))
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))
   #ggtitle("GPP daily sums for all year ")
-
+grid.arrange(Gr_NEE, Gr_Reco, Gr_GPP, ncol=1)
 #### For defined time gap ###############
 pd <- position_dodge(1)
 for (i in 1:length(periods_a))
@@ -302,16 +319,19 @@ ggplot() +
   theme(axis.title.x = element_text(size =15, face="bold"))
   #ggtitle("DRAW mean PAR")
 
-ggplot() +
+Gr_PAR  = ggplot() +
   geom_line(data =  Daily_A_114, aes(x=Doy, y=ma(PAR_Den_Avg)),position=pd) +
-  geom_point(data = Daily_A_114, aes(x=Doy, y=PAR_Den_Avg),position=pd,size=3, shape=21, fill="white")+
-  coord_cartesian(xlim = c(80, 365))+
+  geom_point(data = Daily_A_114, aes(x=Doy, y=PAR_Den_Avg),position=pd,size=2, shape=21, fill="white")+
+  coord_cartesian(xlim = c(80, 365), ylim = c(0,595))+
   xlab("Day of the year") +
   ylab(expression(paste(bold("PAR "),"( ", mu,"mol", " ",m^-2," ",s^-1," )",sep=""))) +
-  theme_few(base_size = 20, base_family = "serif")+
-  theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold"))+
-  ggtitle("DRAW mean PAR")
+  theme_few(base_size = 18, base_family = "serif")+
+  theme(axis.title.y = element_text(size = 13, face="bold")) +
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
+  #ggtitle("DRAW mean PAR")
 
 temp  =  AllData_A[AllData_A[['DateTime']] > as.POSIXct("2013-12-02") & AllData_A[['DateTime']] < as.POSIXct("2013-12-03"), ]
 ggplot() +
@@ -330,34 +350,40 @@ ggplot() +
 #####Tsoil A and B
 
 
-ggplot() +
+Gr_Tsoil = ggplot() +
+  geom_line(data = Daily_A_114, aes(x=Doy, y=ma(Tsoil_f)),position=pd, size=.8) +
+  geom_point(data = Daily_A_114, aes(x=Doy, y=Tsoil_f),position=pd,size=2, shape=21, fill="white",alpha=.5)+
 
-  geom_line(data = Daily_A_114, aes(x=Doy, y=ma(Tsoil_f)),position=pd) +
-  geom_point(data = Daily_A_114, aes(x=Doy, y=Tsoil_f),position=pd,size=3, shape=21, fill="white")+
-
-  geom_line(data = Daily_B_114, aes(x=Doy, y=ma(Tsoil_f)),position=pd) +
-  geom_point(data = Daily_B_114, aes(x=Doy, y=Tsoil_f),position=pd,size=3, shape=21, fill="black")+
+  geom_line(data = Daily_B_114, aes(x=Doy, y=ma(Tsoil_f)),position=pd,size=.8,linetype=2) +
+  geom_point(data = Daily_B_114, aes(x=Doy, y=Tsoil_f),position=pd,size=2, shape=21, fill="black",alpha=.5)+
   xlab("Day of the year") +
   ylab(expression(bold(paste(T["soil"]," at 5cm depth "," (", ring("C"),")",sep="")))) +
-  theme_few(base_size = 20, base_family = "serif")+
-  theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold"))
+  theme_few(base_size = 18, base_family = "serif")+
+  theme(axis.title.y = element_text(size = 13, face="bold")) +
+  theme(plot.margin = unit(c(0,1,0,1), "lines"))+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
   #ggtitle("Tsoil A and B")
 
 #####Volumetric water content VWC A and B
 
-ggplot() +
-  geom_line(data =  Daily_A_114, aes(x=Doy, y=ma(VWC_1_Avg*100)),position=pd) +
-  geom_point(data = Daily_A_114, aes(x=Doy, y=(VWC_1_Avg*100)),position=pd,size=3, shape=21, fill="white")+
+Gr_water = ggplot() +
+  geom_line(data =  Daily_A_114, aes(x=Doy, y=ma(VWC_1_Avg*100)),position=pd,linetype=2) +
+  geom_point(data = Daily_A_114, aes(x=Doy, y=(VWC_1_Avg*100)),position=pd,size=2, shape=21, fill="white",alpha=.3)+
+  geom_rect(data =  Daily_A_114, aes(x=Doy,xmin=Doy-1,xmax=Doy+1, y=Rain_mm_Tot_sums, ymin=0, xmin=3),  position=pd, size=3,alpha=.8) +
   geom_line(data =  Daily_B_114, aes(x=Doy, y=ma(VWC_1_Avg*100)),position=pd) +
-  geom_point(data = Daily_B_114, aes(x=Doy, y=(VWC_1_Avg*100)),position=pd,size=3, shape=21, fill="black")+
-  coord_cartesian(xlim = c(110, 365),ylim = c(10, 40))+
+  geom_point(data = Daily_B_114, aes(x=Doy, y=(VWC_1_Avg*100)),position=pd,size=2, shape=21, fill="black",alpha=.3)+
+  coord_cartesian(xlim = c(110, 365),ylim = c(0, 40))+
   xlab("Day of the year") +
   ylab(expression(bold(paste("SWC at 5cm depth (%)"," ",sep="")))) +
-  theme_few(base_size = 20, base_family = "serif")+
-  theme(axis.title.y = element_text(size = 15, face="bold")) +
-  theme(axis.title.x = element_text(size =15, face="bold"))+
-  ggtitle("Volumetric water content VWC A and B")
+  theme_few(base_size = 18, base_family = "serif")+
+  theme(axis.title.y = element_text(size = 13, face="bold")) +
+  theme(plot.margin = unit(c(0,1,0,2), "lines"))+
+  theme(axis.title.x = element_text(size =15, face="bold"))
+  #ggtitle("Volumetric water content VWC A and B")
+
+grid.arrange(Gr_PAR, Gr_Tsoil, Gr_water, ncol=1)
 
 ##### Precipitation
 
