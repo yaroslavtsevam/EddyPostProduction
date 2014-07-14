@@ -42,7 +42,10 @@ AllData_B = merge(AllData_B,AllData_A[,c(1,40),with=FALSE], by = 'DateTime')
 
 PlotWindRoses(AllData_A, 'wind_speed', 'wind_dir')
 NA_count = tapply(as.numeric(AllData_A['NEE']),AllData_A$Doy, function(x) x)
-
+AllData_A$VWC_1_Avg = as.numeric(AllData_A$VWC_1_Avg)
+AllData_B$VWC_1_Avg = as.numeric(AllData_B$VWC_1_Avg)
+AllData_A$moisture_levels = cut(AllData_A$VWC_1_Avg, c(0,.1,.2,.3,.4), right=FALSE, labels=c("<10%","<20%","<30%","<40"))
+AllData_B$moisture_levels = cut(AllData_B$VWC_1_Avg, c(0,.1,.2,.3,.4), right=FALSE, labels=c("<10%","<20%","<30%","<40"))
 hourly_data_A = hourly_data(AllData_A)
 hourly_data_B = hourly_data(AllData_B)
 AllData_A_daily = daily_data(AllData_A)
@@ -79,6 +82,8 @@ hourly_snow_cover_A = hourly_data_for_event(AllData_A,'snow_cover')
 hourly_snow_cover_B = hourly_data_for_event(AllData_B,'snow_cover')
 Daily_A_114 =  AllData_A_daily[AllData_A_daily[['Doy']] >114,]
 Daily_B_114 =  AllData_B_daily[AllData_B_daily[['Doy']] >114,]
+Daily_A_114$moisture_levels = cut(Daily_A_114$VWC_1_Avg, c(0,.1,.2,.3,.4), right=FALSE, labels=c("<10%","<20%","<30%","<40"))
+Daily_B_114$moisture_levels = cut(Daily_B_114$VWC_1_Avg, c(0,.1,.2,.3,.4), right=FALSE, labels=c("<10%","<20%","<30%","<40"))
 AllData_A_114 =  AllData_A[AllData_A[['Doy']] >114,]
 Daily_A_114_b = Daily_A_114[Daily_A_114[['NA_count']]>47,]
 Daily_B_114_b = Daily_B_114[Daily_B_114[['NA_count']]>47,]
@@ -273,20 +278,22 @@ ggplot() +
 #### Dependecies from factors  - useless for NEE, we need to deconstruct it###########
 
 ggplot() +
-
-  geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=NEE_f_sums* 12 * 18/10000),position=pd,size=2, shape=1, fill="red")+
-  geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=GPP* 12 * 18/10000),position=pd,size=2, shape=2, fill="green")+
-  geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=Reco* 12 * 18/10000),position=pd,size=2, shape=3, fill="blue")+
+  geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=Reco* 12 * 18/10000),position=pd,size=2, shape=1, fill="red")+
+  geom_smooth(data = Daily_A_114, aes(x=Tsoil_f, y=Reco* 12 * 18/10000), method = "lm", formula = y ~ x + I(x^3), size = 1 )+
+  #geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=GPP* 12 * 18/10000),position=pd,size=2, shape=2, fill="green")+
+  #geom_point(data = Daily_A_114 , aes(x=Tsoil_f, y=Reco* 12 * 18/10000),position=pd,size=2, shape=3, fill="blue")+
+  facet_wrap(~moisture_levels, drop=TRUE,)+
   geom_hline(yintercept = 0, size=.5, linetype = 2)+
   coord_cartesian(xlim = c(0, 25))+
   xlab("Temperature (C)")+
-  ylab(expression(paste(bold("NEE, GPP, Reco")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
+  ylab(expression(paste(bold("NEE")," ( ","g "," ",C[CO[2]]," ",m^-2," ",d^-1, " )",sep="")))+
   #μmol CO2 m-2s-1)")+
   theme_few(base_size = 15, base_family = "serif")+
   theme(axis.title.y = element_text(size = 15, face="bold")) +
   theme(axis.title.x = element_text(size =15, face="bold"))
   #ggtitle("Dependecies from factors  - useless for NEE, we need to deconstruct it ")
-
+Daily_A_114$moisture_levels<-as.factor(Daily_A_114$moisture_levels)
+ancova(NEE_f_sums ~ Tsoil_f + moisture_levels, data = Daily_A_114, layout=c(5,1))
 #### Dependecies from factors  - useless for NEE, we need to deconstruct it###########
 
 ggplot() +

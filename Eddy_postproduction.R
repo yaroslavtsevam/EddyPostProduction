@@ -481,26 +481,7 @@ insert_event_mask = function(dt, datetime_column_name, event_start_date, event_s
   }
 }
 
-insert_category_mask = function(dt, category_column_name, gradation_vector, gradation_names, gradation_column_name){
-  if (class(dt$category_column_name)[1] == class(gradation_vector)) {
-    category_mask = dt$category_column_name <  gradation_vector[1]
-    gradation_column = category_mask
-    gradation_column[category_mask]  = gradation_namesp[1]
-    for (i in 2:length(gradation_vector)){
-      category_mask = (dt$category_column_name < gradation_vector[i] & dt$category_column_name > gradation_vector[i-1])
-      gradation_column[category_mask]  = gradation_namesp[i]
-    }
-    dt = data.table(dt)
-    new_dt = dt[, gradation_name:= gradation_column]
-    setnames(new_dt, 'event_name',gradation_column_name)
-    return (new_dt)
-  }
-  else
-  {
-    print("Gradation vector's and category column's class mismatch")
-    return (NULL)
-  }
-}
+
 add_events = function(events_file, allData, DateVarName){
   with_events = allData
   allevents = fread(events_file, header = "auto", sep = "auto")
