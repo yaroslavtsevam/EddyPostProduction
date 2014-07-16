@@ -20,6 +20,7 @@ AllData_A = FullEddyPostProcess (DataFolderA,Site_A,site_polygon_A,events_A,Site
 AllData_B = FullEddyPostProcess (DataFolderB,Site_B,site_polygon_B,events_B,Site_coord_and_zone)
 setkey(AllData_A, 'DateTime')
 setkey(AllData_B, 'DateTime')
+#Adding PAR to site B as soon they very close
 AllData_B = merge(AllData_B,AllData_A[,c(1,40),with=FALSE], by = 'DateTime')
 
 #new_names = paste(names(AllData_A),"_a", sep="")

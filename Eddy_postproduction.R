@@ -69,12 +69,17 @@ read_biomet_data = function(data_path)
    # if the merged dataset does exist, append to it
     if (exists("dataset")){
       temp_dataset = fread(file, header = "auto", sep = "auto")
+      temp_dataset_startline = which(as.numeric(temp_dataset$RECORD) == 0);
+      temp_dataset = temp_dataset[temp_dataset_startline[1]:length(temp_dataset$RECORD), ]
+
       dataset = rbind.fill(dataset, temp_dataset)
       rm(temp_dataset)
     }
     # if the merged dataset doesn't exist, create it
     if (!exists("dataset")){
       dataset = fread(file, header = "auto", sep = "auto")
+      temp_dataset_startline = which(as.numeric(temp_dataset$RECORD) == 0);
+      dataset = dataset[temp_dataset_startline[1]:length(temp_dataset$RECORD), ]
     }
 
   }
@@ -484,11 +489,16 @@ insert_event_mask = function(dt, datetime_column_name, event_start_date, event_s
 
 add_events = function(events_file, allData, DateVarName){
   with_events = allData
-  allevents = fread(events_file, header = "auto", sep = "auto")
-  for (i in 1:length(allevents[,1, with=FALSE][[1]])){
-    start_date = as.POSIXct(as.character(allevents[i,1, with =FALSE]))
-    stop_date  = as.POSIXct(as.character(allevents[i,2, with =FALSE]))
-    with_events = insert_event_mask(with_events,DateVarName,start_date,stop_date,as.character(allevents[i,3, with =FALSE]))
+  if (file.exists(events_file))
+  {
+      allevents = fread(events_file, header = "auto", sep = "auto")
+      for (i in 1:length(allevents[,1, with=FALSE][[1]])){
+        start_date = as.POSIXct(as.character(allevents[i,1, with =FALSE]))
+        stop_date  = as.POSIXct(as.character(allevents[i,2, with =FALSE]))
+        with_events = insert_event_mask(with_events,DateVarName,start_date,stop_date,as.character(allevents[i,3, with =FALSE]))
+  }
+  }else {
+    print("No events file found")
   }
   return(with_events)
 }
@@ -499,7 +509,7 @@ add_events = function(events_file, allData, DateVarName){
 FullEddyPostProcess = function(DataFolder,SiteUTM,SitePolygon,events_file,SiteCoordZone){
   # Reading Data
   data = read_eddy_data(DataFolder)
-  biometdata = read_biomet_data(DataFolder)
+  biometdata = read_biomet_data("Data_O/")
 
   # Forming data set for gap filling
   joined_data = join_for_gapfilling(data, biometdata)
