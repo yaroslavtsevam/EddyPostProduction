@@ -8,6 +8,29 @@ library('ggthemes')
 library('pastecs')
 library("gridExtra")
 # Reading Data Function
+adapt_complex_csv = function(data){
+  temp_dataset = data
+  if (names(temp_dataset)[1] != "filename") {
+    print(temp_dataset)
+    print("Whoops strange csv, may be you've allready edited it in Excel? Trying to fix")
+    names(temp_dataset) = (as.character(temp_dataset[1, ]))
+    print('Names gotten')
+  }
+
+    temp_dataset_startline = which(as.character(temp_dataset$daytime) == "T" | as.character(temp_dataset$daytime) == "F")[1];
+    temp_dataset = temp_dataset[temp_dataset_startline:length(temp_dataset[['date']]), ]
+    print('Removing junk data')
+    print("Checking data")
+    print(temp_dataset$date[1:10])
+    if (gregexpr(pattern ='\\.', as.character(temp_dataset[['date']][1]))[[1]][1] > -1) {
+    temp_dataset[['date']] = paste(substr(temp_dataset[['date']],7,10),substr(temp_dataset[['date']],4,5),substr(temp_dataset[['date']],1,2),sep="-")
+    print('New date constructed')
+  }
+
+    #print(temp_dataset)
+
+  return(temp_dataset)
+}
 read_eddy_data = function(data_path)
 {
   setwd(data_path)
@@ -20,21 +43,12 @@ read_eddy_data = function(data_path)
     if (exists("dataset")){
       temp_dataset = fread(file, header = "auto", sep = "auto")
       print(paste(paste("File",file, sep = " "), "read", sep=" "))
-      if (names(temp_dataset)[1] != "filename") {
-        print(temp_dataset)
-        print("Whoops strange csv, may be you've allready edited it in Excel? Trying to fix")
-          names(temp_dataset) = (as.character(temp_dataset[1, ]))
-          print('Names gotten')
-          temp_dataset = temp_dataset[4:length(temp_dataset[['date']]), ]
-          print('Removing junk data')
-          temp_dataset[['date']] = paste(substr(temp_dataset[['date']],7,10),substr(temp_dataset[['date']],4,5),substr(temp_dataset[['date']],1,2),sep="-")
-          print('Constructing new date')
-          inter = na.exclude(match(names(temp_dataset),names(dataset)))
-          temp_dataset = temp_dataset[,inter, with = FALSE]
-          dataset = data.table(dataset)[,inter, with = FALSE]
-          print(temp_dataset)
+      temp_dataset = adapt_complex_csv(temp_dataset)
 
-      }
+      inter = na.exclude(match(names(temp_dataset),names(dataset)))
+      #print(head(dataset))
+      temp_dataset = temp_dataset[,inter, with = FALSE]
+      dataset = data.table(dataset)[,inter, with = FALSE]
       #print(names(temp_dataset))
       stop_date_data = max(as.double(dataset[['DOY']]), na.rm=TRUE)
       print( paste("Stop date:", stop_date_data, sep=" "))
@@ -45,6 +59,8 @@ read_eddy_data = function(data_path)
          print( paste("Rows read:",length(temp_dataset[['DOY']]), sep=" "))
       }
       print( paste("Rows read:",length(temp_dataset[['DOY']]), sep=" "))
+      print(dataset$date[1])
+      print(temp_dataset$date[1])
       dataset = rbind.fill(dataset, temp_dataset)
       rm(temp_dataset)
     }
@@ -52,6 +68,9 @@ read_eddy_data = function(data_path)
     if (!exists("dataset")){
       print(paste(paste("File",file, sep = " "), "read", sep=" "))
       dataset = data.table(fread(file, header = "auto", sep = "auto"))
+      #temp_dataset_startline = which(as.character(dataset$daytime) == "T" | as.character(dataset$daytime) == "F")[1];
+      #dataset = dataset[temp_dataset_startline:length(dataset[['DOY']]), ]
+      dataset = adapt_complex_csv(dataset)
       print( paste("Rows read:", length(dataset[['DOY']]), sep=" "))
     }
   }
@@ -69,8 +88,8 @@ read_biomet_data = function(data_path)
    # if the merged dataset does exist, append to it
     if (exists("dataset")){
       temp_dataset = fread(file, header = "auto", sep = "auto")
-      temp_dataset_startline = which(as.numeric(temp_dataset$RECORD) == 0);
-      temp_dataset = temp_dataset[temp_dataset_startline[1]:length(temp_dataset$RECORD), ]
+      temp_dataset_startline = grep(":",temp_dataset$TIMESTAMP)[1];
+      temp_dataset = temp_dataset[temp_dataset_startline:length(temp_dataset$RECORD), ]
 
       dataset = rbind.fill(dataset, temp_dataset)
       rm(temp_dataset)
@@ -78,8 +97,8 @@ read_biomet_data = function(data_path)
     # if the merged dataset doesn't exist, create it
     if (!exists("dataset")){
       dataset = fread(file, header = "auto", sep = "auto")
-      temp_dataset_startline = which(as.numeric(temp_dataset$RECORD) == 0);
-      dataset = dataset[temp_dataset_startline[1]:length(temp_dataset$RECORD), ]
+      temp_dataset_startline = grep(":",dataset$TIMESTAMP)[1];
+      dataset = dataset[temp_dataset_startline[1]:length(dataset$RECORD), ]
     }
 
   }
@@ -119,7 +138,7 @@ join_for_gapfilling = function(data_,biometdata_){
 
   names(EddyData.F) = c('Year','DoY','Hour','date','NEE','H2O_NEE','LE','H','Tair','rH','VPD','Ustar','wind_speed','wind_dir','x_70%','x_90%','QF_h2o','rand_err_h2o_flux','rand_err_co2_flux','QF')
   EddyDataWithPosix.F <- fConvertTimeToPosix(na.exclude(EddyData.F), 'YDH', Year.s='Year', Day.s='DoY', Hour.s='Hour')
-  EddyDataWithPosixNew.F = fill_gap_by_date(EddyDataWithPosix.F,"DateTime",21)
+  EddyDataWithPosixNew.F = data.table(fill_gap_by_date(EddyDataWithPosix.F,"DateTime",21))
   print("Filled gaps")
   setnames(biometdata_,'TIMESTAMP','DateTime')
   setkey(biometdata_,'DateTime')
@@ -129,9 +148,30 @@ join_for_gapfilling = function(data_,biometdata_){
   #join = EddyDataWithPosixNew.F[biometdata_[,c(1,5,6,7,8,15,16,17,20,23,33,36,37,38,39,40,44,45,46,47,48,49,50,51,52,53,54,56,57), with=FALSE],roll=FALSE]
   print('Joined')
   #Converting column names to satisfy REddyProc convention
-  setnames(joined,"TSoil_1_Avg","Tsoil")
+  if (any(names(biometdata_) == "Ts_avg_10cm_Avg")) {
+    setnames(joined,"Ts_avg_10cm_Avg","Tsoil")
+  }
+  if (any(names(biometdata_) == "TSoil_1_Avg")) {
+    setnames(joined,"TSoil_1_Avg","Tsoil")
+  }
+  if (any(names(biometdata_) == "PPFD_Avg")) {
+    setnames(joined,"PPFD_Avg","PAR_Den_Avg")
+  }
+  if (any(names(biometdata_) == "UpTot_Avg")) {
+    setnames(joined,"UpTot_Avg","Rg")
+  }
+  if (any(names(biometdata_) == "Rg_Avg")) {
+    setnames(joined,"Rg_Avg","Rg")
+  }
+  if (any(names(biometdata_) == "VWC_1_Avg")) {
+    setnames(joined,"VWC_1_Avg","SWC_1")
+  }
+  if (any(names(biometdata_) == "SWC_10cm_1_Avg")) {
+    setnames(joined,"SWC_10cm_1_Avg","SWC_1")
+  }
+
   joined[['Tsoil']]=as.numeric(joined[['Tsoil']])
-  setnames(joined,"UpTot_Avg","Rg")
+
   joined[['Rg']]=as.numeric(joined[['Rg']])
   joined = joined[3:length(joined[,1, with=FALSE][[1]])]
   if ( length(which(duplicated(joined))) > 0 ) {
@@ -160,6 +200,10 @@ fill_gap_by_date  = function(oldData,TimeVariableName,newDataNumberofColumns){
   for (i in which(!mask))
   {
     #num_numeric_dates = seq(as.numeric(EddyDataWithPosix.F[['DateTime']][i]),as.numeric(EddyDataWithPosix.F[['DateTime']][i+1]), by = 1800)
+    print("Gap start")
+    print(oldData[[TimeVariableName]][(i)])
+    print("Gap end")
+    print(oldData[[TimeVariableName]][(i+1)])
     num_posix_dates = seq.POSIXt(oldData[[TimeVariableName]][(i)], oldData[[TimeVariableName]][(i+1)], by = as.difftime(30,units = "mins"))
     num_posix_dates = num_posix_dates[2:(length(num_posix_dates)-1)]
     gap = as.data.frame(cbind(num_posix_dates))
@@ -319,13 +363,24 @@ daily_data = function(Data){
   names(daily_means) = new_names
   names(daily_errors) = paste(new_names,"errors", sep="_")
 
-  PAR_margin_for_night = 5
-  Reco  = as.vector(by(Data[,c("NEE_f","PAR_Den_Avg"), with=FALSE], Data$Doy, function(x) mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0], na.rm=TRUE)*48 ))
-  GPP  = as.vector(by(Data[,c("NEE_f","PAR_Den_Avg"), with=FALSE], Data$Doy, function(x) {
-    y = mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0 ], na.rm=TRUE) - x[['NEE_f']][x[['PAR_Den_Avg']] > PAR_margin_for_night ]
-    return(sum( y[y>0], na.rm=TRUE))}
-   ))
+#  PAR_margin_for_night = 5
+ # Reco  = as.vector(by(Data[,c("NEE_f","PAR_Den_Avg"), with=FALSE], Data$Doy, function(x) mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0], na.rm=TRUE)*48 ))
+#  GPP  = as.vector(by(Data[,c("NEE_f","PAR_Den_Avg"), with=FALSE], Data$Doy, function(x) {
+#    y = mean(x[['NEE_f']][x[['PAR_Den_Avg']] < PAR_margin_for_night & x[['NEE_f']] > 0 ], na.rm=TRUE) - x[['NEE_f']][x[['PAR_Den_Avg']] > PAR_margin_for_night ]
+#    return(sum( y[y>0], na.rm=TRUE))}
+#   ))
 
+  Reco  = as.vector(by(Data[,c("NEE_f","SolElev"), with=FALSE], Data$Doy, function(x) mean(x[['NEE_f']][x[['SolElev']] < 0 & x[['NEE_f']] > 0], na.rm=TRUE)*48 ))
+  GPP  = as.vector(by(Data[,c("NEE_f","SolElev"), with=FALSE], Data$Doy, function(x) {
+    y = mean(x[['NEE_f']][x[['SolElev']] < 0 & x[['NEE_f']] > 0 ], na.rm=TRUE) - x[['NEE_f']][x[['SolElev']] > 0 ]
+    return(sum( y[y>0], na.rm=TRUE))}
+  ))
+  Reco[Reco == 'NaN'] =0
+  Reco[Reco == 'NA'] = 0
+  Reco[Reco == NA] = 0
+  GPP[GPP == 'NaN'] =0
+  GPP[GPP == 'NA'] = 0
+  GPP[GPP == NA] = 0
 
   NA_count = tapply(as.numeric(Data[['NEE']]), Data$Doy, function(x) length(which(is.na(x))))
   NA_marker = NA_count
@@ -409,6 +464,7 @@ hourly_data = function(AllData){
     Data = AllData[AllData[['month_number']] == m,]
 
     hour_mean = tapply(Data[['NEE_f']], Data$hour, mean)
+    #print(hour_mean)
     hour_error = tapply(Data[['NEE_f']], Data$hour, sd)
     hour_error = hour_error/sqrt(length(hour_error))*1.96
     hour_month = rep(m, length(hour_error))
@@ -417,7 +473,8 @@ hourly_data = function(AllData){
     hour_months  = c(hour_months, hour_month)
 
   }
-  hour = as.integer(names(hour_mean))
+  hour = rep(0:23, length(hour_means)/24)
+  #print(hour)
   return(data.frame(cbind(hour_means,hour_errors,hour_months,hour)))
 }
 
@@ -508,8 +565,8 @@ add_events = function(events_file, allData, DateVarName){
 
 FullEddyPostProcess = function(DataFolder,SiteUTM,SitePolygon,events_file,SiteCoordZone){
   # Reading Data
-  data = read_eddy_data(DataFolder)
-  biometdata = read_biomet_data("Data_O/")
+  data = read_eddy_data(DataFolderB)
+  biometdata = read_biomet_data(DataFolder)
 
   # Forming data set for gap filling
   joined_data = join_for_gapfilling(data, biometdata)
