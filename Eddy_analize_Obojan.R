@@ -21,10 +21,10 @@ Site_coord_and_zone = c(55.837631, 37.564302, 4)
 Site_coord_and_zone_O = c(51.14567, 36.50624, 4)
 
 
-
-AllData_O = FullEddyPostProcess (DataFolderO,Site_O,site_polygon_O,events_O,Site_coord_and_zone_O)
-AllData_A = FullEddyPostProcess (DataFolderA,Site_A,site_polygon_A,events_A,Site_coord_and_zone)
-AllData_B = FullEddyPostProcess (DataFolderB,Site_B,site_polygon_B,events_B,Site_coord_and_zone)
+All_towers_height  = 1.5
+AllData_O = FullEddyPostProcess (DataFolderO,Site_O,site_polygon_O,events_O,Site_coord_and_zone_O, All_towers_height)
+AllData_A = FullEddyPostProcess (DataFolderA,Site_A,site_polygon_A,events_A,Site_coord_and_zone,All_towers_height)
+AllData_B = FullEddyPostProcess (DataFolderB,Site_B,site_polygon_B,events_B,Site_coord_and_zone,All_towers_height)
 
 setkey(AllData_A, 'DateTime')
 setkey(AllData_B, 'DateTime')

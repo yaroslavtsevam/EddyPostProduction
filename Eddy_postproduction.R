@@ -258,7 +258,7 @@ max_footprints = function(site_point, s_polygon, alldata, wind_var)
 }
 
 
-filter_by_quality = function(join_){
+filter_by_quality = function(join_,tower_height){
   print("Starting filtering")
   join_[join_ < -9000] = NA
 
@@ -276,6 +276,7 @@ filter_by_quality = function(join_){
   join_[['NEE']][join_[['QF']] > 7 ]= NA
   join_[['H2O_NEE']][join_[['QF_h2o']] > 5 ]= NA
   join_[['H2O_NEE']][join_[['x_70%']] > join_[['max_footprint']]]= NA
+  join_[['H2O_NEE']][join_[['x_70%']] > tower_height*10]= NA
   join_[['H20_NEE']][join_[['x_70%']] < 2 ]= NA
 
   return(join_)
@@ -563,7 +564,7 @@ add_events = function(events_file, allData, DateVarName){
 
 #================================================================================
 
-FullEddyPostProcess = function(DataFolder,SiteUTM,SitePolygon,events_file,SiteCoordZone){
+FullEddyPostProcess = function(DataFolder,SiteUTM,SitePolygon,events_file,SiteCoordZone, tower_height){
   # Reading Data
   data = read_eddy_data(DataFolderB)
   biometdata = read_biomet_data(DataFolder)
@@ -574,7 +575,7 @@ FullEddyPostProcess = function(DataFolder,SiteUTM,SitePolygon,events_file,SiteCo
   #Generating column of max footprints
   joined_data = max_footprints(SiteUTM, SitePolygon, joined_data,'wind_dir')
   # Pre Gap filling Filtering
-  join.filtered = filter_by_quality(joined_data)
+  join.filtered = filter_by_quality(joined_data,tower_height)
 
   #+++ Fill gaps in variables with MDS gap filling algorithm
   # Creating DataTable with filled and biomet data
