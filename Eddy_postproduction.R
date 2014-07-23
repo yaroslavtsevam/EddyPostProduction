@@ -339,7 +339,7 @@ ma  = function(x,n=7){
 daily_data = function(Data){
   new_names = c()
   for (name in names(Data)){
-    if ((class(AllData_A[[name]])[1] == 'numeric' ) | (class(AllData_A[[name]])[1] == 'integer' ) | (class(AllData_A[[name]])[1] == 'character' )){
+    if ((class(Data[[name]])[1] == 'numeric' ) | (class(Data[[name]])[1] == 'integer' ) | (class(Data[[name]])[1] == 'character' )){
       daily_sum = tapply(as.numeric(Data[[name]]), Data$Doy, sum, na.rm = TRUE)
       daily_mean = tapply(as.numeric(Data[[name]]), Data$Doy, mean, na.rm = TRUE)
       daily_error = tapply(as.numeric(Data[[name]]), Data$Doy, sd)
