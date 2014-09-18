@@ -33,15 +33,16 @@ adapt_complex_csv = function(data){
 }
 read_eddy_data = function(data_path)
 {
-  setwd(data_path)
-  file_list <- list.files( pattern="eddypro*")
+  #setwd(data_path)
+  #file_list =paste(data_path, list.files(path pattern="eddypro*"),sep="/")
+  file_list = paste(data_path,list.files(path = data_path, pattern="eddypro*"),sep="/")
   print("Found next eddypro result files:")
   print(file_list)
   for (file in file_list){
 
     # if the merged dataset does exist, append to it
     if (exists("dataset")){
-      temp_dataset = fread(file, header = "auto", sep = "auto")
+      temp_dataset = fread(file, header = "auto", autostart = 60, skip=1)
       print(paste(paste("File",file, sep = " "), "read", sep=" "))
       temp_dataset = adapt_complex_csv(temp_dataset)
 
@@ -67,27 +68,27 @@ read_eddy_data = function(data_path)
     # if the merged dataset doesn't exist, create it
     if (!exists("dataset")){
       print(paste(paste("File",file, sep = " "), "read", sep=" "))
-      dataset = data.table(fread(file, header = "auto", sep = "auto"))
+      dataset = fread(file, header = "auto", autostart = 60, skip=1)
       #temp_dataset_startline = which(as.character(dataset$daytime) == "T" | as.character(dataset$daytime) == "F")[1];
       #dataset = dataset[temp_dataset_startline:length(dataset[['DOY']]), ]
       dataset = adapt_complex_csv(dataset)
       print( paste("Rows read:", length(dataset[['DOY']]), sep=" "))
     }
   }
-  setwd('../')
-  return (dataset)
+  #setwd('../')
+  return (data.table(dataset))
 }
 
 read_biomet_data = function(data_path)
 {
-  setwd(data_path)
-  file_list <- list.files( pattern="*.dat")
+  #setwd(data_path)
+  file_list = paste(data_path,list.files(path = data_path, pattern="*.dat"),sep="/")
 
   for (file in file_list){
 
    # if the merged dataset does exist, append to it
     if (exists("dataset")){
-      temp_dataset = fread(file, header = "auto", sep = "auto")
+      temp_dataset = fread(file, header = "auto", autostart = 60, skip=1)
       temp_dataset_startline = grep(":",temp_dataset$TIMESTAMP)[1];
       temp_dataset = temp_dataset[temp_dataset_startline:length(temp_dataset$RECORD), ]
 
@@ -96,13 +97,13 @@ read_biomet_data = function(data_path)
     }
     # if the merged dataset doesn't exist, create it
     if (!exists("dataset")){
-      dataset = fread(file, header = "auto", sep = "auto")
-      temp_dataset_startline = grep(":",dataset$TIMESTAMP)[1];
-      dataset = dataset[temp_dataset_startline[1]:length(dataset$RECORD), ]
+      dataset = fread(file, header = "auto", autostart = 60, skip=1)
+      #temp_dataset_startline = grep(":",dataset$TIMESTAMP)[1];
+      #dataset = dataset[temp_dataset_startline[1]:length(dataset$RECORD), ]
     }
 
   }
-  setwd('../')
+  #setwd('../')
   return (data.table(dataset))
 }
 
@@ -182,8 +183,11 @@ join_for_gapfilling = function(data_,biometdata_){
   print("Starting big Gap fill")
   joined.tf = fill_gap_by_date(joined,"DateTime",77)
   print('Stoped big gap fill')
-  joined.tf[joined.tf == "NaN" | joined.tf == "NAN"] = NA
-  #joined.tf[which(duplicated(joined.tf))] = NULL
+  joined.tf = data.table(joined.tf)
+  td = joined.tf[,2:length(names(joined.tf)), with=FALSE]
+  td[td == "NaN" | td == "NAN" | td == "NA"] = NA
+  joined.tf = cbind(joined.tf[,1,with=FALSE],td)
+  joined.tf[which(duplicated(joined.tf))] = NULL
 
   if ( length(which(is.na(joined.tf[['DateTime']]))) > 0 ) {
     joined.tf = joined.tf[!which(is.na(joined.tf[['DateTime']]))]
@@ -213,7 +217,7 @@ fill_gap_by_date  = function(oldData,TimeVariableName,newDataNumberofColumns){
     gap_length = gap_length + length(num_posix_dates)
     print(paste(paste("Date gap ",i,"")," filled",""))
   }
-  NewData[NewData == "NA"] = NA
+  #NewData[NewData == "NA"] = NA
   return (NewData)
 }
 
@@ -244,7 +248,7 @@ footprint_for_angle = function(angle_v, ks_, bs_, xp_, yp_)
 }
 max_footprints = function(site_point, s_polygon, alldata, wind_var)
 {
-  angle_vector = alldata[[wind_var]]
+  angle_vector = as.numeric(alldata[[wind_var]])
   xp = as.double(site_point[1]+ 0.0)
   yp = as.double(site_point[2]+ 0.0)
   index = 1:length(s_polygon[,1])
@@ -261,29 +265,44 @@ max_footprints = function(site_point, s_polygon, alldata, wind_var)
 filter_by_quality = function(join_,tower_height){
   print("Starting filtering")
   join_[join_ < -9000] = NA
+  join_[['NEE']] = as.numeric(join_[['NEE']])
+  join_[['x_70%']] = as.numeric(join_[['x_70%']])
+  join_[['QF']] = as.numeric(join_[['QF']])
+  join_[['max_footprint']] = as.numeric(join_[['max_footprint']])
 
   join_.sigma = sd(join_[['NEE']], na.rm = TRUE)
   join_.mean = mean(join_[['NEE']], na.rm = TRUE)
+
   print(join_.sigma)
   print(join_.mean)
 
   print("Going to filter out next amount of NEE data:")
   print(length(join_[['NEE']][join_[['NEE']] < join_.mean - 3*join_.sigma]))
   join_[['NEE']][join_[['NEE']] < join_.mean - 3*join_.sigma] = NA
-  join_[['NEE']][join_[['NEE']] > join_.mean + 3*join_.sigma ]= NA
+  join_[['NEE']][join_[['NEE']] > join_.mean + 3*join_.sigma ] = NA
   join_[['NEE']][join_[['x_70%']] > join_[['max_footprint']] ] = NA
+  join_[['NEE']][join_[['x_70%']] > tower_height * 10]= NA
   join_[['NEE']][join_[['x_70%']] < 2 ] = NA
-  join_[['NEE']][join_[['QF']] > 7 ]= NA
+  join_[['NEE']][join_[['QF']] > 7 ] = NA
   join_[['H2O_NEE']][join_[['QF_h2o']] > 5 ]= NA
-  join_[['H2O_NEE']][join_[['x_70%']] > join_[['max_footprint']]]= NA
-  join_[['H2O_NEE']][join_[['x_70%']] > tower_height*10]= NA
-  join_[['H20_NEE']][join_[['x_70%']] < 2 ]= NA
+  join_[['H2O_NEE']][join_[['x_70%']] > join_[['max_footprint']]] = NA
+  join_[['H2O_NEE']][join_[['x_70%']] > tower_height * 10] = NA
+  join_[['H20_NEE']][join_[['x_70%']] < 2 ] = NA
 
   return(join_)
 }
 
 reddyproc_gapfill = function(join_){
-  EddyProc.C <- sEddyProc$new('Join', join_, c('NEE', 'LE', 'H', 'Rg', 'Tair', 'Tsoil', 'rH', 'VPD'))
+  join_$NEE = as.numeric(join_$NEE)
+  join_$LE = as.numeric(join_$LE)
+  join_$H = as.numeric(join_$H)
+  join_$Rg = as.numeric(join_$Rg)
+  join_$Tair = as.numeric(join_$Tair)
+  join_$Tsoil = as.numeric(join_$Tsoil)
+  join_$rH = as.numeric(join_$rH)
+  join_$VPD = as.numeric(join_$VPD)
+
+  EddyProc.C = sEddyProc$new('Join', join_, c('NEE', 'LE', 'H', 'Rg', 'Tair', 'Tsoil', 'rH', 'VPD'))
   EddyProc.C$sMDSGapFill('NEE', FillAll.b=TRUE)
   EddyProc.C$sMDSGapFill('Rg', FillAll.b=FALSE)
   EddyProc.C$sMDSGapFill('LE', FillAll.b=FALSE)
@@ -298,6 +317,14 @@ reddyproc_gapfill = function(join_){
   setkey(join_,'DateTime')
   FullData_ = join_[TempDT[,c('sDateTime','NEE_f','Rg_f','LE_f','H_f','Tair_f','rH_f','VPD_f','Tsoil_f'), with=FALSE],roll=FALSE]
 
+  return(EddyProc.C)
+}
+reddyproc_extract_main_data = function(join_,EddyProc_){
+  TempDT = data.table(EddyProc_$sTEMP[c('sDateTime','NEE_f','Rg_f','LE_f','H_f','Tair_f','rH_f','VPD_f','Tsoil_f')])
+  TempDT[[1]] = TempDT[[1]] + as.difftime(15, units="mins")
+  setkey(TempDT,'sDateTime')
+  setkey(join_,'DateTime')
+  FullData_ = join_[TempDT[,c('sDateTime','NEE_f','Rg_f','LE_f','H_f','Tair_f','rH_f','VPD_f','Tsoil_f'), with=FALSE],roll=FALSE]
   return(FullData_)
 }
 add_separators = function(FullData_, lat, lon, zone){
@@ -566,7 +593,7 @@ add_events = function(events_file, allData, DateVarName){
 
 FullEddyPostProcess = function(DataFolder,SiteUTM,SitePolygon,events_file,SiteCoordZone, tower_height){
   # Reading Data
-  data = read_eddy_data(DataFolderB)
+  data = read_eddy_data(DataFolder)
   biometdata = read_biomet_data(DataFolder)
 
   # Forming data set for gap filling
@@ -579,15 +606,17 @@ FullEddyPostProcess = function(DataFolder,SiteUTM,SitePolygon,events_file,SiteCo
 
   #+++ Fill gaps in variables with MDS gap filling algorithm
   # Creating DataTable with filled and biomet data
-  FullData  = reddyproc_gapfill(join.filtered)
+  Reddyproc  = reddyproc_gapfill(join.filtered)
+  FullData = reddyproc_extract_main_data(join.filtered, Reddyproc)
   FullData = ForMotherRussia(FullData)
   #Adding time periods
   FullData_with_Sep = add_separators(FullData,SiteCoordZone[1],SiteCoordZone[2],SiteCoordZone[3] )
   #Read event filed and add event's masks
   WithEvents = add_events(events_file,FullData_with_Sep,'DateTime')
   # WindRose
-  PlotWindRoses(FullData, 'wind_speed', 'wind_dir')
-  return(WithEvents)
+  AllData = list(WithEvents, Reddyproc)
+
+  return(AllData)
 }
 #package.skeleton(list = c("read_eddy_data","read_biomet_data","join_for_gapfilling","max_footprints","filter_by_quality","reddyproc_gapfill","add_separators","add_events","PlotWindRoses","footprint_for_angle","fill_gap_by_date"), name = "EddyPostProcess")
 

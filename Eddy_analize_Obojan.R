@@ -1,10 +1,9 @@
 source(file="Eddy_postproduction.r", local=TRUE)
-function = DrawVariablesbyMonth(){}
 
 
-DataFolderA = 'Data_A/'
-DataFolderB = 'Data_B/'
-DataFolderO = 'Data_O/'
+DataFolderA = 'Data_A'
+DataFolderB = 'Data_B'
+DataFolderO = 'Data_O'
 Site_A = c(410041, 6188869)
 Site_B = c(410155, 6188893)
 Site_O = c(325574, 5668981)
@@ -19,6 +18,7 @@ events_B = 'Data_B/events.csv'
 events_O = 'Data_O/events.csv'
 Site_coord_and_zone = c(55.837631, 37.564302, 4)
 Site_coord_and_zone_O = c(51.14567, 36.50624, 4)
+All_towers_height=1.5
 
 
 All_towers_height  = 1.5
@@ -110,9 +110,9 @@ pd <- position_dodge(.1) # move them .05 to the left and right
 hourly_data_As =hourly_data_A[hourly_data_A$hour_months > 4 & hourly_data_A$hour_months < 10,]
 hourly_data_Os =hourly_data_O[hourly_data_O$hour_months > 4 & hourly_data_O$hour_months < 10 ,]
 hourly = ggplot() +
-  geom_errorbar(data =hourly_data_As, aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors), linetype=1,size=.1, width=.4, position=pd) +
-  geom_line(data =hourly_data_As, aes(x=hour, y=hour_means),position=pd,size=.5, linetype=2) +
-  geom_point(data = hourly_data_As, aes(x=hour, y=hour_means),position=pd,size=2, shape=21, fill="white")+
+  #geom_errorbar(data =hourly_data_As, aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors), linetype=1,size=.1, width=.4, position=pd) +
+  #geom_line(data =hourly_data_As, aes(x=hour, y=hour_means),position=pd,size=.5, linetype=2) +
+  #geom_point(data = hourly_data_As, aes(x=hour, y=hour_means),position=pd,size=2, shape=21, fill="white")+
   geom_errorbar(data = hourly_data_Os, aes(x=hour, y=hour_means, ymin=hour_means-hour_errors, ymax=hour_means+hour_errors),linetype=1,size=.1, width=.4, position=pd) +
   geom_line(data =hourly_data_Os, aes(x=hour, y=hour_means),position=pd,size=.5) +
   geom_point(data = hourly_data_Os, aes(x=hour, y=hour_means),position=pd,size=2, shape=21, fill="black")+
@@ -309,7 +309,7 @@ Daily_A_114$moisture_levels<-as.factor(Daily_A_114$moisture_levels)
 ancova(NEE_f_sums ~ Tsoil_f + moisture_levels, data = Daily_A_114, layout=c(5,1))
 #### Dependecies from factors  - useless for NEE, we need to deconstruct it###########
 
-ggplot() +
+Yt = ggplot() +
 
   geom_point(data = Daily_A_114 , aes(x=PAR_Den_Avg, y=GPP*12*18/10000),position=pd,size=2, shape=21, fill="white")+
 
@@ -356,7 +356,7 @@ Gr_PAR  = ggplot() +
   #ggtitle("DRAW mean PAR")
 
 temp  =  AllData_A[AllData_A[['DateTime']] > as.POSIXct("2013-12-02") & AllData_A[['DateTime']] < as.POSIXct("2013-12-03"), ]
-ggplot() +
+Zt = ggplot() +
   geom_point(data =temp, aes(x=hour, y=SolElev), position=pd,size=3, shape=21, fill="white") +
   #coord_cartesian(ylim = c(0, 600)) +
   xlab("Day of the year") +
@@ -402,7 +402,7 @@ Gr_water = ggplot() +
   scale_x_continuous(breaks = round(seq(120, 360, by = 30),1))+
   xlab("Day of the year") +
   ylab(expression(bold(paste("SWC at 5cm depth (%)"," ",sep="")))) +
-  theme_few(base_size = 18, base_family = "serif")+
+  #theme_few(base_size = 18, base_family = "serif")+
   theme(axis.title.y = element_text(size = 13, face="bold")) +
   theme(plot.margin = unit(c(0,1,0,2), "lines"))+
   theme(axis.title.x = element_text(size =15, face="bold"))
@@ -412,7 +412,7 @@ grid.arrange(Gr_PAR, Gr_Tsoil, Gr_water, ncol=1)
 
 ##### Precipitation
 
-ggplot() +
+Gt = ggplot() +
   geom_rect(data =  Daily_A_114, aes(x=Doy,xmin=Doy-1,xmax=Doy+1, y=Rain_mm_Tot_sums, ymin=0, xmin=3),  position=pd, size=5) +
   coord_cartesian(xlim = c(110, 365))+
   xlab("Day of the year") +
@@ -434,7 +434,8 @@ ggplot() +
 #Sending to plotly
 library("plotly")
 set_credentials_file(username="yaroslavtsevam", api_key="v9p6cfsk35")
-py <- plotly()
-r <- py$ggplotly(hourly)
-r$response$url
+signup(username = "yaroslavtsevam", email = "yaroslavtsevam@gmail.com")
+py <- plotly(username="yaroslavtsevam", key="v9p6cfsk35")
+plot_list =  gg2list(Gr_water)
+plot = py$ggplotly(Gr_water )
 
