@@ -365,6 +365,7 @@ ma  = function(x,n=7){
 }
 
 daily_data = function(Data){
+  Data = Data[[1]]
   new_names = c()
   for (name in names(Data)){
     if ((class(Data[[name]])[1] == 'numeric' ) | (class(Data[[name]])[1] == 'integer' ) | (class(Data[[name]])[1] == 'character' )){
@@ -425,6 +426,7 @@ daily_data = function(Data){
 
 weekly_data = function(Data){
   new_names = c()
+  Data = Data[[1]]
   for (name in names(Data)){
     if ((class(AllData_A[[name]])[1] == 'numeric' ) | (class(AllData_A[[name]])[1] == 'integer' ) | (class(AllData_A[[name]])[1] == 'character' )){
       weekly_sum = tapply(as.numeric(Data[[name]]), Data$week, sum, na.rm = TRUE)
@@ -486,6 +488,7 @@ hourly_data = function(AllData){
   hour_means = c()
   hour_errors = c()
   hour_months  = c()
+  AllData = AllData[[1]]
 
   for (m in 1:12) {
 
@@ -511,7 +514,7 @@ hourly_NEE_period = function(AllData,start_date,stop_date){
   hour_means = c()
   hour_errors = c()
   hour_months  = c()
-
+  AllData=AllData[[1]]
   AllData = AllData[(AllData[['DateTime']] > as.POSIXct(start_date) & AllData[['DateTime']] < as.POSIXct(stop_date)),]
   nmax = max(na.exclude(AllData[['month_number']]))
   nmin = min(na.exclude(AllData[['month_number']]))
@@ -538,7 +541,7 @@ hourly_data_for_event = function(AllData, event_name){
   hour_errors = c()
 
 
-  Data = AllData[AllData[[event_name]],]
+  Data = AllData[[1]][AllData[[1]][[event_name]],]
 
   hour_mean = tapply(Data[['NEE_f']], Data$hour, mean)
   hour_error = tapply(Data[['NEE_f']], Data$hour, sd)
