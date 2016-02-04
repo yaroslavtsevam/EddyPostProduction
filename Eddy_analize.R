@@ -1,5 +1,5 @@
 source(file="Eddy_postproduction.r", local=TRUE)
-function = DrawVariablesbyMonth(){}
+DrawVariablesbyMonth = function()
 
 
 DataFolderA = 'Data_A/'
@@ -16,9 +16,9 @@ forest_polygon  = data.frame(as.numeric(c(409472,409943,409532,408959,408587,408
 events_A = 'Data_A/events.csv'
 events_B = 'Data_B/events.csv'
 Site_coord_and_zone = c(55.837631, 37.564302, 4)
-All_towers_height  = 1.5
-AllData_A = FullEddyPostProcess (DataFolderA,Site_A,site_polygon_A,events_A,Site_coord_and_zone,All_towers_height)
-AllData_B = FullEddyPostProcess (DataFolderB,Site_B,site_polygon_B,events_B,Site_coord_and_zone,All_towers_height)
+All_towers_height = 1.5
+AllData_A = FullEddyPostProcess(DataFolderA,Site_A,site_polygon_A,events_A,Site_coord_and_zone,All_towers_height)
+AllData_B = FullEddyPostProcess(DataFolderB,Site_B,site_polygon_B,events_B,Site_coord_and_zone,All_towers_height)
 setkey(AllData_A, 'DateTime')
 setkey(AllData_B, 'DateTime')
 #Adding PAR to site B as soon they very close
